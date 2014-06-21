@@ -14,7 +14,7 @@ class handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         request_path = self.path[1:]
         if request_path == "":
-            request_path = "index.html"
+            request_path = server_config.toppage
         request_path = urllib.request.url2pathname(request_path)
         if not os.path.exists(request_path):
             self.return_404()
@@ -46,7 +46,7 @@ class handler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(dir_res_bytes)
 
 
-server_address = ("", 10345)
+server_address = (server_config.domain, server_config.port)
 httpd = http.server.HTTPServer(server_address, handler);
-print("server listening at " + "localhost" + ", " + str(server_address[1]))
+print("server listening at " + server_address[0] + " " + str(server_address[1]))
 httpd.serve_forever()
