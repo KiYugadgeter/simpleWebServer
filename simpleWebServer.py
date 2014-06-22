@@ -23,12 +23,36 @@ class handler(http.server.BaseHTTPRequestHandler):
             with open(request_path, "rb") as f:
                 res_bytes = f.read()
                 self.send_response(200, "OK")
-                self.send_header("Access-Control-Allow-Origin", "*");
                 self.send_header("Content-Type", mimetypes.guess_type(request_path, False)[0])
+                self.send_header("Access-Control-Allow-Origin", "*");
+                self.send_header("Last-Modified", os.stat(request_path).st_mtime)
+                self.send_header("Content-length", len(res_bytes))
+                self.send_header("Date", self.date_time_string())
+                self.send_header("Server", self.server_version)
                 self.end_headers()
                 self.wfile.write(res_bytes)
         elif os.path.exists(request_path) and os.path.isdir(request_path):
             self.open_dir()
+
+    def do_HEAD(self):
+        request_path = self.path[1:]
+        self.send_header("Date", self.date_time_string())
+        self.send_header("Server", self.server_version)
+        if os.path.exists(request_path):
+            s = os.stat(request_path)
+            self.send_header("Content-length", s[6])
+            self.send_header("Last-Modified", s.st_mtime)
+            self.end_headers()
+        elif request_path == "":
+            if os.path.exists("index.html"):
+                request_path = "index.html"
+                s = os.stat(request_path)
+                self.send_header("Content-Type", mimetypes.guess_type(request_path, False)[0])
+                self.send_header("Content-length", s[6])
+                self.send_header("Last-Modified", self.date_time_string(s.st_mtime))
+                self.end_headers()
+            else: 
+                self.end_headers()
 
     def open_dir(self):
         r_path = urllib.request.url2pathname(self.path[1:])
